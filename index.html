@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>拼图小游戏</title>
+    <style>
+    *{padding: 0;margin: 0;list-style: none;}
+    .content{width: 1000px;height: auto;display: flex;justify-content: center;margin: 40px auto 0;}
+    #game{width: 500px;height: 500px;border: 2px solid black;margin: auto;position: relative;cursor: pointer;}
+    .game-child{position: absolute;border: 1px solid #fff;background-color: red;background-image:url('./img.jpeg');background-repeat: no-repeat;background-size: 500px 500px;box-sizing: border-box;transition: 0.2s; }
+    .btn{margin-bottom: 20px;}
+    .btn button{outline-style: none;padding: 3px 10px;border-radius: 4px;cursor: pointer;margin-right: 10px;}
+    .act{background-attachment: red;background-color: red;color: white;font-weight: bold;border: 2px solid white;    box-shadow: 2px 3px 2px #000;}
+    .img{margin-left: 40px;margin-top: 47px;}
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div>
+            <div class="btn">
+                <button value="9"  class="act" >9宫格</button>
+                <button value="16">16宫格</button>
+                <button value="25">25宫格</button>
+                <button value="36">36宫格</button>
+                <button value="49">49宫格</button>
+                <button value="64">64宫格</button>
+            </div>
+            <ul id="game"></ul>
+        </div>
+        <div class="img">
+            <p style="margin-bottom: 10px;">原图：</p>
+            <img src="./img.jpeg" width="200px" height="200px" alt="">
+        </div>
+    </div> 
+    <script> 
+    /* ie9以上兼容 */
+    //btn模块
+    let btn = document.getElementsByClassName('btn')[0]
+    setGame(500, parseInt(btn.children[0].value))
+    btn.addEventListener('click',function(e){
+        let target = e.target;
+        if(!target.value) return
+        let items =  btn.children
+        for(let i = 0;i<items.length;i++){
+            if(items[i].classList[0]=='act'){
+                items[i].classList.remove('act')
+            }
+        }
+        target.classList.add('act')
+        document.getElementById('game').innerHTML=''
+         setGame(500, parseInt(target.value))
+    },true)
+    //game模块
+    function setGame(width, gameNum){
+        let  row = col = Math.sqrt(gameNum), oldArr = [],oldArrnewArr = [];
+        const itemsDom = document.getElementById('game');
+        const W_item = H_item = width / col;
+        //渲染dom
+        (function() {
+            for (let i = 0; i < row; i++) {
+                for (let j = 0; j < col; j++) {
+                    oldArr.push({
+                        left: W_item * j,
+                        top: H_item * i,
+                    })
+                }
+            }
+            newArr = [...oldArr];
+            newArr.splice(gameNum - 1)
+            newArr.sort(function (a, b) { return 0.5 - Math.random() })
+            newArr.push(oldArr[gameNum - 1])
+            newArr.forEach((element, i) => {
+                let li = `<li style="width:${W_item}px;height:${H_item}px;left:${element.left}px;top:${element.top}px;
+                background-position:-${oldArr[i].left}px -${oldArr[i].top}px;opacity:${i == gameNum - 1 ? 0 : 1}" data-flag=${i == gameNum - 1 ? 'empty' : 'block'}  class="game-child"></li>`
+                itemsDom.innerHTML += li
+            });
+        })()
+        /* 拼图点击事件 */
+        let emptyDom = document.querySelector('.game-child[data-flag=empty]')
+        itemsDom.addEventListener('click',function(e){
+            let  targetDom = e.target;
+            if(targetDom.dataset.flag==='empty')return
+            let { top: targetTop, left: targetLeft } = targetDom.style
+            let { top: emptyTop, left: emptyLeft } = emptyDom.style
+            if(isAdjacent()){
+                targetDom.style.left = emptyLeft
+                targetDom.style.top = emptyTop
+                emptyDom.style.left = targetLeft
+                emptyDom.style.top = targetTop
+            }
+            if (isSuccess()) {setTimeout(() => {
+                alert('拼图成功')
+            }, 600)}
+            //判断是否相邻  
+            function isAdjacent() {
+                let isColItem =parseInt( Math.abs(parseFloat(targetTop) - parseFloat(emptyTop)) ) == parseInt(emptyDom.style.height) && parseInt(targetLeft) == parseInt(emptyLeft)
+                let isRowItem =parseInt( Math.abs(parseFloat(targetLeft) - parseFloat(emptyLeft)) ) == parseInt(emptyDom.style.height) && parseInt(targetTop) == parseInt(emptyTop)
+                return isColItem || isRowItem
+            }
+            //判断是否拼图成功
+            function isSuccess() {
+                let  lis = itemsDom.children;
+                for (let i = 0; i < lis.length; i++) {
+                    if ((parseInt(lis[i].style.left) != parseInt(oldArr[i].left)) || (parseInt(lis[i].style.top) != parseInt(oldArr[i].top))) {
+                      return  false
+                    }
+                }
+                emptyDom.style.opacity = '1'
+                return true
+            }
+        },true)
+    }
+    </script>
+</body>
+</html>
